@@ -1,77 +1,151 @@
-<html>
-  <head>
-    <script
-      type="text/javascript"
-      src="https://www.gstatic.com/charts/loader.js"
-    ></script>
-    <script type="text/javascript">
-      google.charts.load("current", {
-        packages: ["corechart", "bar", "table"],
-      });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quran Audio Player</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h3 {
+      text-align: center;
+      color: #333;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin: 10px 0;
+    }
+    .lead {
+      width: 100px;
+      display: inline-block;
+      font-weight: bold;
+    }
+    select, input[type="number"] {
+      padding: 5px;
+      width: 200px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    audio {
+      width: 100%;
+      margin-top: 10px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 10px auto;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Quran Audio Player</h1>
 
-      fetch(
-        "https://script.google.com/macros/s/AKfycbz1teyXYxbb1vz4Hg1BASUNeONHRGHxuJ_NS9sKJM8YajxQ-1UYSh8tQyzqv_6vZkGJ/exec?sheetName=Sheet1",
-        {
-          redirect: "follow",
-        }
-      )
-        .then((response) => response.text())
-        .then((result) => {
-          sheetData = JSON.parse(result);
-          drawChart(sheetData);
-        })
-        .catch((error) => console.log("error", error));
+    <ul>
+      <li>
+        <span class="lead"><b>Reciter</b></span>
+        <select id="reciter" onchange="setURLandImage()">
+          <option value="AbdulSamad_64kbps_QuranExplorer.Com">Abdul Basit Abdul Samad</option>
+          <option value="Abdul_Basit_Mujawwad_128kbps">Abdul Basit Mujawwad</option>
+          <option value="Abdul_Basit_Murattal_192kbps">Abdul Basit Murattal</option>
+        </select>
+      </li>
+      <li>
+        <span class="lead"><b>Chapter</b></span>
+        <select id="chapter" onchange="setURLandImage()">
+          <option value="1">1: Al-Faatiha</option>
+          <option value="2">2: Al-Baqara</option>
+          <option value="3">3: Aal-i-Imraan</option>
+        </select>
+      </li>
+      <li>
+        <span class="lead"><b>Aya #</b></span>
+        <input type="number" id="verse" size="5" oninput="setURLandImage()" value="1" min="1">
+      </li>
+    </ul>
 
-      function drawChart(chartData) {
-        var data = google.visualization.arrayToDataTable(chartData);
+    <h3>Preview:</h3>
+    <div id="verseImage">
+      <img id="ayahImage" src="https://everyayah.com/data/images_png/1_1.png" alt="Ayat Preview" onerror="this.src='https://via.placeholder.com/300x100?text=No+Image'">
+    </div>
+    
+    <audio id="audioPlayer" controls>
+      <source id="audioSource" src="https://everyayah.com/data/AbdulSamad_64kbps_QuranExplorer.Com/001001.mp3" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+    
+    <div>
+      <input type="checkbox" id="autoplay" onchange="toggleAutoplay()">
+      <label for="autoplay">Auto Play</label>
+    </div>
 
-        var options = {
-          chart: {
-            title: "Company Performance",
-            subtitle: "Sales, Expenses, and Profit: 2014-2017",
-          },
-          bars: "horizontal",
-        };
+    <h3>Download:</h3>
+    <ul>
+      <li><a id="audioLink" href="https://everyayah.com/data/AbdulSamad_64kbps_QuranExplorer.Com/001001.mp3" download>Download Audio</a></li>
+      <li><a id="imageLink" href="https://everyayah.com/data/images_png/1_1.png" download>Download Image</a></li>
+    </ul>
+  </div>
 
-        var chart = new google.charts.Bar(
-          document.getElementById("barchart_material")
-        );
+  <script>
+    function setURLandImage() {
+      const reciter = document.getElementById('reciter').value;
+      const chapter = document.getElementById('chapter').value;
+      const verse = document.getElementById('verse').value;
 
-        chart.draw(data, google.charts.Bar.convertOptions(options));
+      if (verse < 1 || verse === "") return; // Cegah nilai kosong atau kurang dari 1
+
+      const audioURL = `https://everyayah.com/data/${reciter}/${pad(chapter)}${pad(verse)}.mp3`;
+      const imageURL = `https://everyayah.com/data/images_png/${chapter}_${verse}.png`;
+
+      document.getElementById('audioSource').src = audioURL;
+      document.getElementById('audioPlayer').load();
+      document.getElementById('ayahImage').src = imageURL;
+      document.getElementById('audioLink').href = audioURL;
+      document.getElementById('imageLink').href = imageURL;
+
+      // Cek apakah autoplay diaktifkan
+      if (document.getElementById('autoplay').checked) {
+        playAudio();
       }
+    }
 
-      fetch(
-        "https://script.google.com/macros/s/AKfycbz1teyXYxbb1vz4Hg1BASUNeONHRGHxuJ_NS9sKJM8YajxQ-1UYSh8tQyzqv_6vZkGJ/exec?sheetName=Sheet2",
-        {
-          redirect: "follow",
-        }
-      )
-        .then((response) => response.text())
-        .then((result) => {
-          sheetData = JSON.parse(result);
-          drawTable(sheetData);
-        })
-        .catch((error) => console.log("error", error));
+    function pad(number) {
+      return number.toString().padStart(3, '0');
+    }
 
-      function drawTable(chartData) {
-        var data = google.visualization.arrayToDataTable(chartData);
-
-        var options = {
-          showRowNumber: true,
-          width: "80%",
-          height: "90%",
-        };
-
-        var table = new google.visualization.Table(
-          document.getElementById("table_div")
-        );
-
-        table.draw(data, options);
+    function toggleAutoplay() {
+      if (document.getElementById('autoplay').checked) {
+        playAudio();
       }
-    </script>
-  </head>
-  <body>
-    <div id="barchart_material" style="width: 900px; height: 500px"></div>
-    <div id="table_div" style="margin-top: 40px"></div>
-  </body>
+    }
+
+    function playAudio() {
+      const audioPlayer = document.getElementById('audioPlayer');
+      audioPlayer.play().catch(error => console.error("Autoplay failed:", error));
+    }
+  </script>
+</body>
 </html>
